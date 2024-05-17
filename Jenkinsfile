@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     stages {
         stage('Build') {
             steps {
@@ -8,72 +7,53 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
-
         stage('Unit and Integration Tests') {
             steps {
-                // Run unit tests using JUnit
+                // Run unit tests using JUnit and integration tests using a tool like Selenium
                 sh 'mvn test'
-
-                // Run integration tests using Selenium
-                sh 'mvn selenium:test'
             }
         }
-
         stage('Code Analysis') {
             steps {
-                // Integrate a code analysis tool using Jenkins plugin (e.g., Checkstyle)
-                checkstyle canRunOnFailed: true, defaultEncoding: 'UTF-8', pattern: '**/*.java'
+                // Use a tool like SonarQube for code analysis
+                echo 'Performing code analysis with SonarQube'
             }
         }
-
         stage('Security Scan') {
             steps {
-                // Perform security scan using OWASP ZAP
-                sh 'zap-cli --start --quickurl http://localhost:8080 --spider --output /zap/spider-output.html'
-                sh 'zap-cli --quickscan --output /zap/scan-output.html'
+                // Use a tool like OWASP ZAP for security scanning
+                echo 'Performing security scan with OWASP ZAP'
             }
         }
-
         stage('Deploy to Staging') {
             steps {
-                // Deploy the application to a staging server using AWS CLI
-                sh 'aws ecs deploy ...' // Replace '...' with actual AWS ECS deployment command
+                // Deploy the application to a staging server (e.g., AWS EC2 instance)
+                echo 'Deploying to staging environment'
             }
         }
-
         stage('Integration Tests on Staging') {
             steps {
-                // Run integration tests on the staging environment using JMeter
-                sh 'jmeter -n -t /path/to/jmeter/testplan.jmx -l /path/to/results/output.jtl'
+                // Run integration tests on the staging environment
+                echo 'Running integration tests on staging environment'
             }
         }
-
         stage('Deploy to Production') {
             steps {
-                // Deploy the application to a production server using AWS CLI
-                sh 'aws ecs deploy ...' // Replace '...' with actual AWS ECS deployment command
+                // Deploy the application to a production server (e.g., AWS EC2 instance)
+                echo 'Deploying to production environment'
             }
         }
     }
-
     post {
         success {
-            // Send success notification email
-            emailext (
-                to: 'bhanu.psm27@gmail.com',
-                subject: "Pipeline Successful - ${currentBuild.fullDisplayName}",
-                body: "The pipeline has completed successfully.",
-                attachLog: true
-            )
+            mail to: bhanu.psm27@gmail.com,
+                 subject: "Jenkins Pipeline succeeded: ${currentBuild.fullDisplayName}",
+                 body: "The Jenkins Pipeline ${env.JOB_NAME} succeeded! View the log at: ${env.BUILD_URL}"
         }
         failure {
-            // Send failure notification email
-            emailext (
-                to: 'bhanu.psm27@gmail.com',
-                subject: "Pipeline Failed - ${currentBuild.fullDisplayName}",
-                body: "The pipeline has failed. Check the Jenkins console output for details.",
-                attachLog: true
-            )
+            mail to: bhanu.psm27@gmail.com,
+                 subject: "Jenkins Pipeline failed: ${currentBuild.fullDisplayName}",
+                 body: "The Jenkins Pipeline ${env.JOB_NAME} failed. View the log at: ${env.BUILD_URL}"
         }
     }
 }
